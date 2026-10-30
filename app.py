@@ -76,22 +76,51 @@ def multiescolha(df, coluna, titulo, nmax=10):
     st.plotly_chart(fig,use_container_width=True)
 
 
+def separar_precisao(df):
+    """Não confundir pontos municipais de referência com escolas localizadas."""
+    validos = df.dropna(subset=['latitude', 'longitude']).copy()
+    validos = validos[
+        validos['latitude'].between(-23.20, -22.75) &
+        validos['longitude'].between(-50.15, -49.65)
+    ]
+    qualidade = validos['precisao_geografica'].fillna('').astype(str).str.upper()
+    nao_localizados = qualidade.str.contains('MUNICIPIO_REFERENCIA|NAO_LOCALIZADA', regex=True)
+    aproximados = qualidade.str.contains(
+        'REVISAR|APROX|ESTIMADO|CEP_AREA|CORRECAO_MANUAL', regex=True
+    )
+    return validos.loc[~nao_localizados & ~aproximados], validos.loc[~nao_localizados & aproximados], validos.loc[nao_localizados]
+
+
 def exibir_mapa(df):
-    mapa=folium.Map(location=CENTRO, zoom_start=12, tiles='OpenStreetMap',control_scale=True)
-    validos=df.dropna(subset=['latitude','longitude']).copy()
-    validos=validos[validos['latitude'].between(-23.20,-22.75) & validos['longitude'].between(-50.15,-49.65)]
-    for _,r in validos.iterrows():
-        # Os pop-ups não exibem nomes de responsáveis, telefones, e-mails ou respostas individuais.
-        legenda=f"{r['unidade']} — {r['segmento']} — {r['bairro']}"
-        folium.Marker(location=[float(r['latitude']),float(r['longitude'])], tooltip=legenda,
+    mapa = folium.Map(location=CENTRO, zoom_start=12, tiles='OpenStreetMap', control_scale=True)
+    pontuais, aproximados, _ = separar_precisao(df)
+    for _, r in pontuais.iterrows():
+        legenda = f"{r['unidade']} — {r['segmento']} — {r['bairro']} — posição pontual provável"
+        folium.Marker(
+            location=[float(r['latitude']), float(r['longitude'])],
+            tooltip=legenda,
             popup=folium.Popup(legenda, max_width=360),
-            icon=folium.Icon(color=SEG_CORES.get(r['segmento'],'gray'),icon='book',prefix='fa')).add_to(mapa)
+            icon=folium.Icon(color=SEG_CORES.get(r['segmento'], 'gray'), icon='book', prefix='fa')
+        ).add_to(mapa)
+    for _, r in aproximados.iterrows():
+        legenda = f"{r['unidade']} — {r['bairro']} — localização aproximada: {r['precisao_geografica']}"
+        folium.CircleMarker(
+            location=[float(r['latitude']), float(r['longitude'])], radius=9,
+            color='#D97706', fill=True, fill_opacity=0.6,
+            tooltip=legenda, popup=folium.Popup(legenda, max_width=360)
+        ).add_to(mapa)
     st_folium(mapa, width=None, height=530, returned_objects=[], key='mapa_cultural')
-    if validos.empty:
-        st.warning('A base atual ainda não contém coordenadas verificadas. A preparação geográfica é uma etapa única e separada; o dashboard apenas lê o CSV versionado no GitHub.')
+    total = len(pontuais) + len(aproximados)
+    if not total:
+        st.warning('Nenhuma localização escolar verificável disponível. Posições municipais de referência não são plotadas como escolas.')
     else:
-        st.caption(f'{len(validos)} unidade(s) com coordenadas verificadas nos filtros atuais. Base cartográfica: © OpenStreetMap; coordenadas carregadas de data/escolas.csv, sem chamada a serviços de geocodificação.')
-    return validos
+        st.caption(
+            f'{len(pontuais)} ponto(s) pontual(is) provável(is), '
+            f'{len(aproximados)} aproximação(ões) em laranja. '
+            'Marcadores do município usados como referência não aparecem como escolas. '
+            'Base cartográfica: © OpenStreetMap. Nenhuma consulta de geocodificação é feita ao visualizar.'
+        )
+    return pd.concat([pontuais, aproximados])
 
 escolas, agentes = ler_bases()
 st.title('📚 Mapa do acesso à leitura e à cultura')
@@ -217,12 +246,12 @@ with aba_agentes:
 
 with aba_mapa:
     st.subheader('Georreferenciamento dos equipamentos escolares')
-    mapeaveis = filtradas.dropna(subset=['latitude','longitude'])
+    pontuais, aproximados, referencias = separar_precisao(filtradas)
     a,b,c=st.columns(3)
-    a.metric('Escolas no filtro',len(filtradas))
-    b.metric('Geocodificadas',len(mapeaveis))
-    c.metric('Pendentes',len(filtradas)-len(mapeaveis))
-    st.caption('Marcadores só aparecem quando há latitude e longitude validadas por endereço. A ausência de um marcador não significa ausência de serviço.')
+    a.metric('Respostas no filtro', len(filtradas))
+    b.metric('Pontos prováveis', len(pontuais))
+    c.metric('Aproximados / não localizados', len(aproximados) + len(referencias) + (len(filtradas) - len(pontuais) - len(aproximados) - len(referencias)))
+    st.caption('Verde/ícones por segmento: ponto provável. Laranja: aproximação. Coordenadas de referência municipal não são exibidas como escolas.')
     exibir_mapa(filtradas)
     st.markdown('**Iniciativas culturais:** o formulário informa áreas amplas de atuação, como “toda a cidade”, sem endereço pontual. Elas são analisadas estatisticamente, mas não recebem um marcador inventado.')
     st.caption('O mapa utiliza OpenStreetMap para visualização e coordenadas previamente gravadas em data/escolas.csv. Nenhuma API de geocodificação é chamada durante a visualização. Não é um mapa de calor da população, nem uma medida de acessibilidade por distância.')
