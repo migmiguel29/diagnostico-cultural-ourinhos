@@ -154,7 +154,6 @@ escolas, agentes = ler_bases()
 st.title('📚 Mapa do acesso à leitura e à cultura')
 st.caption('Ourinhos (SP)  ·  Diagnóstico para planejamento cultural  ·  Dados declarados nos questionários de 2026')
 st.info('Leitura dos indicadores: estes números representam apenas os formulários recebidos, não um censo de todos os equipamentos culturais ou escolares do município.',icon='ℹ️')
-st.page_link("pages/Mapa_das_Escolas.py", label="📍 Abrir mapa completo das 29 escolas", help="Mapa independente com pontos, nomes e visualização alternativa.")
 st.caption("Mapa atualizado: versão 31/10/2026 • 31 respostas, 29 localizações distintas, coordenadas já salvas.")
 
 
