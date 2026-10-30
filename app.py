@@ -94,8 +94,11 @@ def separar_precisao(df):
 def exibir_mapa(df):
     mapa = folium.Map(location=CENTRO, zoom_start=12, tiles='OpenStreetMap', control_scale=True)
     pontuais, aproximados, _ = separar_precisao(df)
-    for _, r in pontuais.iterrows():
-        legenda = f"{r['unidade']} — {r['segmento']} — {r['bairro']} — posição pontual provável"
+    unicos = pontuais.drop_duplicates(subset=['latitude', 'longitude'])
+    for _, r in unicos.iterrows():
+        respostas_no_local = int(((pontuais['latitude'] == r['latitude']) & (pontuais['longitude'] == r['longitude'])).sum())
+        sufixo = f" ({respostas_no_local} respostas)" if respostas_no_local > 1 else ""
+        legenda = f"{r['unidade']}{sufixo} — {r['segmento']} — {r['bairro']} — posição pontual provável"
         folium.Marker(
             location=[float(r['latitude']), float(r['longitude'])],
             tooltip=legenda,
@@ -109,13 +112,20 @@ def exibir_mapa(df):
             color='#D97706', fill=True, fill_opacity=0.6,
             tooltip=legenda, popup=folium.Popup(legenda, max_width=360)
         ).add_to(mapa)
+    todos_pontos = pd.concat([unicos[['latitude', 'longitude']], aproximados[['latitude', 'longitude']]]).drop_duplicates()
+    if len(todos_pontos) > 1:
+        mapa.fit_bounds(
+            [[float(todos_pontos['latitude'].min()), float(todos_pontos['longitude'].min())],
+             [float(todos_pontos['latitude'].max()), float(todos_pontos['longitude'].max())]],
+            padding=(30, 30), max_zoom=15
+        )
     st_folium(mapa, width=None, height=530, returned_objects=[], key='mapa_cultural')
     total = len(pontuais) + len(aproximados)
     if not total:
         st.warning('Nenhuma localização escolar verificável disponível. Posições municipais de referência não são plotadas como escolas.')
     else:
         st.caption(
-            f'{len(pontuais)} ponto(s) pontual(is) provável(is), '
+            f'{len(unicos)} escola(s) distintas, em {len(pontuais)} resposta(s); '
             f'{len(aproximados)} aproximação(ões) em laranja. '
             'Pontos estimados em ruas incompatíveis e marcadores municipais não aparecem como escolas. '
             'Base cartográfica: © OpenStreetMap. Nenhuma consulta de geocodificação é feita ao visualizar.'
