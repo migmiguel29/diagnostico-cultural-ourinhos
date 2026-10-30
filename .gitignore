@@ -1,0 +1,14 @@
+*.zip
+*.xlsx
+*.xls
+private/
+dados_privados/
+raw/
+.streamlit/secrets.toml
+.env
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+.projeto_extraido/
+.DS_Store
