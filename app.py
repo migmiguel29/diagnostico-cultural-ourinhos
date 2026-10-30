@@ -119,7 +119,25 @@ def exibir_mapa(df):
              [float(todos_pontos['latitude'].max()), float(todos_pontos['longitude'].max())]],
             padding=(30, 30), max_zoom=15
         )
-    st_folium(mapa, width=None, height=530, returned_objects=[], key='mapa_cultural')
+    # Mapa principal nativo Streamlit: evita problemas de componente Folium em abas.
+    paleta = {'EE':'#3166A2','PEI':'#7A48AC','EMEF':'#238A52',
+              'EMEI':'#D87D2A','NEI':'#B73F51'}
+    pontos_nativos = pd.concat([unicos, aproximados], ignore_index=True)
+    if not pontos_nativos.empty:
+        pontos_nativos['cor_mapa'] = pontos_nativos['segmento'].map(paleta).fillna('#136B77')
+        st.map(
+            pontos_nativos[['latitude', 'longitude', 'cor_mapa']],
+            latitude='latitude', longitude='longitude',
+            color='cor_mapa', size=140, zoom=11
+        )
+        st.caption('Mapa principal com círculos coloridos por segmento; passe o mouse sobre os pontos.')
+        with st.expander('Ver mapa detalhado com nomes das escolas (Folium)', expanded=False):
+            st_folium(mapa, width=None, height=530, returned_objects=[], key='mapa_cultural')
+        with st.expander('Conferir nomes e coordenadas das escolas no mapa', expanded=False):
+            cols = ['unidade', 'segmento', 'bairro', 'latitude', 'longitude', 'precisao_geografica']
+            st.dataframe(pontos_nativos[cols].sort_values('unidade'), use_container_width=True, hide_index=True)
+    else:
+        st.warning('Nenhuma coordenada elegível para o filtro. Confirme os segmentos/bairros selecionados.')
     total = len(pontuais) + len(aproximados)
     if not total:
         st.warning('Nenhuma localização escolar verificável disponível. Posições municipais de referência não são plotadas como escolas.')
@@ -255,13 +273,14 @@ with aba_agentes:
         st.plotly_chart(fig,use_container_width=True)
 
 with aba_mapa:
-    st.subheader('Georreferenciamento dos equipamentos escolares')
+    st.subheader('Mapa das escolas de Ourinhos')
+    st.caption('Versão do mapa: 2026-10-30 • pontos nativos Streamlit a partir do CSV já georreferenciado')
     pontuais, aproximados, referencias = separar_precisao(filtradas)
     a,b,c=st.columns(3)
     a.metric('Respostas no filtro', len(filtradas))
     b.metric('Pontos prováveis', len(pontuais))
     c.metric('Aproximados / não localizados', len(aproximados) + len(referencias) + (len(filtradas) - len(pontuais) - len(aproximados) - len(referencias)))
-    st.caption('Verde/ícones por segmento: ponto provável. Laranja: aproximação. Coordenadas de referência municipal não são exibidas como escolas.')
+    st.caption('Os pontos são desenhados diretamente a partir das colunas latitude e longitude de data/escolas.csv. O mapa Folium detalhado está disponível em uma seção expansível.')
     exibir_mapa(filtradas)
     st.markdown('**Iniciativas culturais:** o formulário informa áreas amplas de atuação, como “toda a cidade”, sem endereço pontual. Elas são analisadas estatisticamente, mas não recebem um marcador inventado.')
     st.caption('O mapa utiliza OpenStreetMap para visualização e coordenadas previamente gravadas em data/escolas.csv. Nenhuma API de geocodificação é chamada durante a visualização. Não é um mapa de calor da população, nem uma medida de acessibilidade por distância.')
