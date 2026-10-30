@@ -88,9 +88,9 @@ def exibir_mapa(df):
             icon=folium.Icon(color=SEG_CORES.get(r['segmento'],'gray'),icon='book',prefix='fa')).add_to(mapa)
     st_folium(mapa, width=None, height=530, returned_objects=[], key='mapa_cultural')
     if validos.empty:
-        st.warning('Nenhuma escola foi geocodificada ainda. Para obter coordenadas pela internet, use a pagina Geocodificacao online no menu lateral e configure a chave TomTom nos Secrets do Streamlit. O painel não inventa coordenadas.')
+        st.warning('A base atual ainda não contém coordenadas verificadas. A preparação geográfica é uma etapa única e separada; o dashboard apenas lê o CSV versionado no GitHub.')
     else:
-        st.caption(f'{len(validos)} unidade(s) com coordenadas verificadas nos filtros atuais. Base cartográfica: © OpenStreetMap; localização obtida pela API TomTom após execução do script.')
+        st.caption(f'{len(validos)} unidade(s) com coordenadas verificadas nos filtros atuais. Base cartográfica: © OpenStreetMap; coordenadas carregadas de data/escolas.csv, sem chamada a serviços de geocodificação.')
     return validos
 
 escolas, agentes = ler_bases()
@@ -225,7 +225,7 @@ with aba_mapa:
     st.caption('Marcadores só aparecem quando há latitude e longitude validadas por endereço. A ausência de um marcador não significa ausência de serviço.')
     exibir_mapa(filtradas)
     st.markdown('**Iniciativas culturais:** o formulário informa áreas amplas de atuação, como “toda a cidade”, sem endereço pontual. Elas são analisadas estatisticamente, mas não recebem um marcador inventado.')
-    st.caption('O mapa utiliza OpenStreetMap para visualização e TomTom para geocodificação opcional, realizada na página administrativa online. Não é um mapa de calor da população, nem uma medida de acessibilidade por distância.')
+    st.caption('O mapa utiliza OpenStreetMap para visualização e coordenadas previamente gravadas em data/escolas.csv. Nenhuma API de geocodificação é chamada durante a visualização. Não é um mapa de calor da população, nem uma medida de acessibilidade por distância.')
 
 with aba_qualidade:
     st.subheader('Origem e qualidade da informação')
@@ -236,7 +236,7 @@ with aba_qualidade:
 
     **Privacidade:** a versão destinada ao GitHub retira nomes e contatos de responsáveis, e-mails, telefones, endereços e observações livres. Os identificadores de unidades são pseudônimos; dados geográficos exatos podem permitir reidentificar uma instituição. Antes da publicação, verificar a autorização institucional e finalidade do consentimento.
 
-    **Geocodificação:** o roteiro TomTom só aceita resultados do município classificados como endereço pontual ou intervalo de números e com confiança textual mínima. Endereços sem número, inconsistentes ou que retornem só centroide de rua/bairro ficam pendentes.
+    **Geocodificação:** coordenadas são preparadas previamente, por fonte aberta ou oficial, verificadas quanto ao município e registradas no CSV. Endereços incompletos ou resultados sem correspondência pontual ficam pendentes.
 
     **Iniciativas:** abrangências como “toda a cidade” não representam um local físico verificável, portanto não são plotadas como pontos.
 
