@@ -88,7 +88,7 @@ def exibir_mapa(df):
             icon=folium.Icon(color=SEG_CORES.get(r['segmento'],'gray'),icon='book',prefix='fa')).add_to(mapa)
     st_folium(mapa, width=None, height=530, returned_objects=[], key='mapa_cultural')
     if validos.empty:
-        st.warning('Nenhuma escola foi geocodificada ainda. Para obter coordenadas pela internet, use a página 'Geocodificacao online' no menu lateral e configure a chave TomTom nos Secrets do Streamlit. O painel não inventa coordenadas.')
+        st.warning('Nenhuma escola foi geocodificada ainda. Para obter coordenadas pela internet, use a pagina Geocodificacao online no menu lateral e configure a chave TomTom nos Secrets do Streamlit. O painel não inventa coordenadas.')
     else:
         st.caption(f'{len(validos)} unidade(s) com coordenadas verificadas nos filtros atuais. Base cartográfica: © OpenStreetMap; localização obtida pela API TomTom após execução do script.')
     return validos
