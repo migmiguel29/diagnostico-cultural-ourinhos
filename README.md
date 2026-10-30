@@ -12,6 +12,19 @@ Painel com indicadores de **31 escolas** e **7 iniciativas culturais** obtidos d
 
 **Situação da base (30/10/2026):** os 31 registros de escolas estão disponíveis, porém as colunas de latitude/longitude **ainda não estão preenchidas**. Não há coordenadas inventadas.
 
+## Geocodificação única com TomTom no Google Colab
+
+O dashboard **não consulta a TomTom ao abrir**. Fluxo recomendado:
+
+1. Abrir o notebook **Geocodificar_Escolas_Ourinhos_TomTom_Colab.ipynb** no Google Colab.
+2. Enviar a exportação original das **31 escolas** e informar a chave TomTom com entrada oculta.
+3. Executar o lote uma única vez, revisar as coordenadas e baixar **resultado_tomtom_colab.zip**.
+4. Extrair somente **escolas.csv** e substituir **data/escolas.csv** no GitHub. Guardar **revisao_tomtom_privado.csv** fora do repositório.
+5. Após conferir permissão de retenção e validar as posições, o Streamlit usa somente o CSV versionado no GitHub; **não consulta geocodificação**.
+
+O notebook produz os mesmos identificadores e as mesmas 28 colunas da base original. **Não requer Python local nem App settings da TomTom no Streamlit**. A preparação via OSM/Streamlit é alternativa legada, não necessária.
+
+**Licenciamento:** confirme autorização contratual para retenção e publicação de coordenadas resultantes da TomTom. O parâmetro storeResult está obsoleto. Não publique chaves de API ou formulários brutos.
 ## Preparar coordenadas UMA VEZ — online
 
 Para conservar as posições no CSV sem consultas recorrentes, a preparação inicial deve ser realizada **uma única vez** e concluída **antes de divulgar o painel**.
