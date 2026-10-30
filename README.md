@@ -13,7 +13,24 @@ Aplicação de indicadores sobre acesso à leitura, equipamentos escolares e ini
 
 **Atenção:** dados amostrais. Não interpretá-los como censo municipal nem associar proximidade geográfica a acesso efetivo sem informações populacionais e de transporte.
 
-## 1. Executar localmente
+## 🌐 Publicar e geocodificar 100% online (sem Python no Windows)
+
+1. Acesse https://share.streamlit.io/ com GitHub e clique em **Create app → Yup, I have an app**.
+2. Repositório: **migmiguel29/diagnostico-cultural-ourinhos**; branch **main**; caminho **app.py**; Python **3.12**. Faça **Deploy**. Aplicativos de repositórios privados são privados inicialmente.
+3. Abra **App settings → Secrets** (ou Advanced settings → Secrets ao publicar) e configure estas duas variáveis TOML, com **a chave TomTom nova, que não tenha sido compartilhada**, e uma senha administrativa forte:
+   ```toml
+TOMTOM_API_KEY = "COLE_SUA_NOVA_CHAVE_AQUI"
+GEOCODIFICADOR_SENHA = "DEFINA_UMA_SENHA_FORTE_E_UNICA"
+```
+4. Na navegação lateral do aplicativo, abra **Geocodificacao online**, informe a senha e faça o upload da **exportação original das escolas** (CSV ou ZIP). **Não envie essa exportação ao GitHub.**
+5. Clique **Iniciar geocodificação TomTom**. O sistema envia os endereços à TomTom, não salva o CSV bruto no repositório e disponibiliza um arquivo **escolas.csv** minimizado, com as coordenadas aceitas.
+6. Revise os pontos, faça o download e atualize **data/escolas.csv** no repositório. O Streamlit recriará a aplicação a partir dos novos dados. Como alternativa, compartilhe apenas o CSV minimizado nesta conversa para atualização do GitHub.
+
+**Importante:** o Streamlit Community Cloud não garante armazenamento permanente de arquivos escritos durante a execução. Por isso a geocodificação gera um CSV para download em vez de sobrescrever silenciosamente os dados do repositório. Coordenadas escolares devem ser revisadas e ter divulgação institucional autorizada. A chave e a senha devem ficar somente nos Secrets da aplicação.
+
+## Executar localmente (opcional)
+
+### Configuração local
 
 Recomendado: Python 3.11 ou 3.12.
 
@@ -27,7 +44,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-O painel já funciona com os arquivos preparados `data/escolas.csv` e `data/agentes.csv`. O mapa informa a ausência de coordenadas até a etapa 2. **Não é necessário ter chave TomTom para consultar os gráficos.**
+O painel já funciona com os arquivos preparados `data/escolas.csv` e `data/agentes.csv`. O mapa informa a ausência de coordenadas até a geocodificação online ou local. **Não é necessário ter chave TomTom para consultar os gráficos.**
 
 ## 2. Geocodificar escolas com a TomTom
 
