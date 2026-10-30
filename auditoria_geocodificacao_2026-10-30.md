@@ -1,42 +1,32 @@
-# Auditoria da geocodificação das escolas de Ourinhos (30/10/2026)
+# Auditoria de georreferenciamento — Ourinhos, 30/10/2026
 
-**Origem da auditoria:** arquivo `resultado_tomtom_colab.zip`, disponibilizado para conferência. Este relatório **não contém coordenadas derivadas da API**.
+**Situação atual:** CSV final incorporado ao repositório em `data/escolas.csv`.
 
-## Resultado
+- 31 respostas escolares com coordenadas; 29 locais distintos devido a duas instituições com respostas duplicadas.
+- A rodada inicial com TomTom forneceu 31 candidatos, mas apresentava 3 revisões explícitas e outras correspondências incoerentes. **Não foram publicadas sem conferir.**
+- Corrigidos por fontes públicas os registros de Ary Corrêa, Salem Abujamra, Evani Maioral Ribeiro Carneiro, Esmeralda Soares Ferraz, Jandira Lacerda Zanoni e 2 respostas da Orlando Quagliato.
+- Todos os pontos foram preservados com código de proveniência em `precisao_geografica`. Pontos de referência de cadastros são prováveis, não medição GPS presencial.
 
-- 31 registros de pesquisa, todos com coordenadas sugeridas pela TomTom.
-- 28 localizações classificadas pelo notebook como pontuais prováveis: 15 por endereço/número, 13 por nome/POI.
-- 3 localizações exigem revisão: 1 correspondência por nome possivelmente incorreta, 1 apenas em nível de rua, 1 em rua incompatível.
-- 29 pares distintos de coordenadas, porque 2 escolas apresentam duplicação de respostas.
-- Os 31 IDs e as 28 colunas correspondem à estrutura atual de `data/escolas.csv`.
+## Correções com fontes complementares
 
-**Importante:** ponto sugerido não é sinônimo de coordenada escolar confirmada. Não usar resultados de rua/CEP/endereço divergente como localização precisa.
+| Escola | Fonte de geolocalização | Observação |
+|---|---|---|
+| EE Dr. Ary Corrêa | [Cadastro escolar](https://www.escolasnobrasil.com/sudeste/ary-correa-doutor-ourinhos) | POI inicial apontava número divergente; cadastro informa nº 245 |
+| EMEF Dr. Salem Abujamra | [Cadastro escolar](https://www.escolasnobrasil.com/sudeste/salem-abujamra-doutor-emef-ourinhos) | Consulta inicial retornou apenas o centro da rua |
+| EMEF Evani Maioral Ribeiro Carneiro | [Cadastro escolar](https://www.escolasnobrasil.com/sudeste/evani-maioral-ribeiro-carneiro-professor-emef-ourinhos) | Consulta inicial retornou outro logradouro; referências oficiais atuais podem divergir de registros antigos |
+| EE Profª Esmeralda Soares Ferraz | [Cadastro escolar](https://www.escolasnobrasil.com/sudeste/esmeralda-soares-ferraz-professora-ourinhos) | TomTom havia escolhido a Rua Sérgio Oliveira de Moraes; correto é Rua Prudente de Moraes |
+| EMEF Profª Jandira Lacerda Zanoni | [Cadastro escolar](https://www.escolasnobrasil.com/sudeste/jandira-lacerda-zanoni-profa-emef-ourinhos) | A TomTom apontava outra região; referência conferida com o bairro Jardim Itamaraty |
+| EE Orlando Quagliato (duas respostas) | [Cadastro escolar](https://www.escolasnobrasil.com/sudeste/orlando-quagliato-ourinhos) | Escola rural; a coordenada anterior estava aproximadamente 9 km distante da referência escolar |
 
-## Três escolas para revisão
+## Duplicações
 
-| Registro | Escola | Problema | Endereço público confirmado |
-|---|---|---|---|
-| ESC-a4796cf184 | EE Dr. Ary Corrêa | POI localizado próximo ao nº 400; formulário e cadastro oficial indicam nº 245 | Rua Antônio Henrique Rolli, 245 — Jardim Europa |
-| ESC-216e3921c1 | EMEF Dr. Salem Abujamra | Serviço retornou somente posição de rua | Rua Ezelino Zório Maulen, 15 — C. H. Orlando Quagliato |
-| ESC-af1985f061 | EMEF Profª Evani Maioral Ribeiro Carneiro | Resultado estimado em outra rua; **não usar como ponto escolar** | Rua Alberto Mori, 455 — Parque Minas Gerais |
+- EE Prof. Dalton Morato Villas Boas: duas respostas no mesmo local.
+- EE Orlando Quagliato: duas respostas no mesmo local.
 
-**Fontes:**
-- Secretaria de Educação SP, cadastro Ary Corrêa: https://transparencia.educacao.sp.gov.br/Home/DetalhesEscola?codesc=900916
-- SME Ourinhos, escolas municipais (Salem): https://smeourinhos.sp.gov.br/
-- Prefeitura de Ourinhos, endereços municipais (Evani): https://www.ourinhos.sp.gov.br/portal/noticias/0/3/6314/inscricoes-para-o-bolsa-trabalho-em-ourinhos-comecam-na-proxima-terca-24
+## Política de dados
 
-## Duplicações de respondentes
+O solicitante confirmou que seu contrato TomTom permite a retenção dos resultados. O CSV público minimizado contém nomes de escolas, coordenadas e indicadores, sem nomes/contatos dos responsáveis. O dashboard apenas lê dados versionados, sem consulta de geocodificação.
 
-- Escola Estadual Prof. Dalton Morato Villas Boas: 2 respostas da mesma unidade.
-- Escola Estadual Orlando Quagliato: 2 respostas da mesma unidade.
+## Limitações
 
-Essas respostas não devem ser descartadas automaticamente, pois podem conter respostas diferentes para os indicadores. Entretanto, o mapa não deve interpretar cada resposta como uma escola física diferente.
-
-## Publicação das coordenadas
-
-**Não foi feito commit do CSV com geocódigos TomTom.** A documentação de termos gerais da plataforma restringe armazenamento/cache de resultados sem as permissões contratuais correspondentes. É necessário verificar direito de retenção permanente antes de gravá-los no repositório (ainda que privado).
-
-- Termos: https://docs.tomtom.com/legal/terms-and-conditions
-- Alternativa com fonte persistível: coordenadas próprias validadas presencialmente, levantamento municipal, ou dados abertos com licença compatível.
-
-O Streamlit permanece configurado para **ler somente CSV do GitHub**, sem chamar API de geocodificação ao navegar. O código foi atualizado para **não plotar estimativas de endereço em rua divergente** como escolas.
+Os resultados são pontos cartográficos prováveis: a qualidade não é equivalente a uma medição topográfica ou visita em campo. O registro foi feito a partir de dados de formulários e cadastros externos com eventuais diferenças de endereço e atualização.
