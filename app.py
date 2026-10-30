@@ -84,7 +84,7 @@ def separar_precisao(df):
         validos['longitude'].between(-50.15, -49.65)
     ]
     qualidade = validos['precisao_geografica'].fillna('').astype(str).str.upper()
-    nao_localizados = qualidade.str.contains('MUNICIPIO_REFERENCIA|NAO_LOCALIZADA', regex=True)
+    nao_localizados = qualidade.str.contains('MUNICIPIO_REFERENCIA|NAO_LOCALIZADA|ENDERECO_ESTIMADO', regex=True)
     aproximados = qualidade.str.contains(
         'REVISAR|APROX|ESTIMADO|CEP_AREA|CORRECAO_MANUAL', regex=True
     )
@@ -117,7 +117,7 @@ def exibir_mapa(df):
         st.caption(
             f'{len(pontuais)} ponto(s) pontual(is) provável(is), '
             f'{len(aproximados)} aproximação(ões) em laranja. '
-            'Marcadores do município usados como referência não aparecem como escolas. '
+            'Pontos estimados em ruas incompatíveis e marcadores municipais não aparecem como escolas. '
             'Base cartográfica: © OpenStreetMap. Nenhuma consulta de geocodificação é feita ao visualizar.'
         )
     return pd.concat([pontuais, aproximados])
