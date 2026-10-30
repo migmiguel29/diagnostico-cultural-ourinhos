@@ -1,78 +1,45 @@
-# Diagnóstico Cultural de Ourinhos — painel Streamlit
+# Diagnóstico Cultural de Ourinhos
 
-Painel com indicadores de **31 escolas** e **7 iniciativas culturais** obtidos dos formulários da pesquisa de 2026. Desenvolvido para ser publicado no **Streamlit Community Cloud**, sem instalação de Python pelo usuário.
+Dashboard de distribuição e acesso à cultura para dados de **31 respostas de escolas (29 locais distintos)** e **7 iniciativas culturais**, construído com Streamlit.
 
-## Arquitetura: somente consulta para visitantes
+## Situação: georreferenciado
 
-- **data/escolas.csv:** registros escolares, indicadores, latitude, longitude e qualidade dos pontos.
-- **data/agentes.csv:** indicadores de iniciativas culturais (sem endereços geocodificáveis).
-- **app.py:** lê os dois CSVs locais, plota gráficos, filtros e marcadores com **Folium/OpenStreetMap**.
-- O aplicativo **não** faz consulta à TomTom, ao Nominatim ou a qualquer outra API de geocodificação enquanto as pessoas navegam.
-- A exibição do mapa-base utiliza imagens OpenStreetMap, mas isso **não é** uma consulta de geocodificação.
+- `data/escolas.csv` contém **31/31 registros com latitude e longitude**, com os nomes públicos dos estabelecimentos, dados culturais minimizados e indicação da origem geográfica.
+- **29 localidades escolares únicas**: duas escolas (EE Dalton Morato Villas Boas e EE Orlando Quagliato) tiveram duas respostas cada. Os indicadores da pesquisa mantêm as 31 respostas.
+- O levantamento foi obtido uma vez por TomTom no Google Colab e revisado com registros públicos de escolas. Foram retificadas as correspondências de EE Dr. Ary Corrêa, EE Esmeralda Soares Ferraz, EMEF Salem Abujamra, EMEF Jandira Lacerda Zanoni, EMEF Evani Maioral Ribeiro Carneiro e EE Orlando Quagliato (2 registros).
+- O painel **não realiza nenhuma consulta à TomTom, Nominatim, ViaCEP ou outra API de geocodificação** quando é aberto. Coordenadas são carregadas do CSV do GitHub. Somente o mapa-base utiliza mosaicos cartográficos OpenStreetMap.
+- Todas as coordenadas são pontos de referência cartográfica prováveis, e não medições topográficas in loco.
 
-**Situação da base (30/10/2026):** os 31 registros de escolas estão disponíveis, porém as colunas de latitude/longitude **ainda não estão preenchidas**. Não há coordenadas inventadas.
+## Publicação (Streamlit Community Cloud)
 
-## Geocodificação única com TomTom no Google Colab
+1. Acesse https://share.streamlit.io/ e autorize GitHub.
+2. Escolha `migmiguel29/diagnostico-cultural-ourinhos`, branch `main`, arquivo `app.py`, Python `3.12`.
+3. Clique em Deploy. **Não é necessário configurar nenhuma chave TomTom nem Secrets para visualizar**.
+4. As atualizações posteriores de pontos ou indicadores são feitas por commit no CSV do repositório.
 
-O dashboard **não consulta a TomTom ao abrir**. Fluxo recomendado:
-
-1. Abrir o notebook **Geocodificar_Escolas_Ourinhos_TomTom_Colab.ipynb** no Google Colab.
-2. Enviar a exportação original das **31 escolas** e informar a chave TomTom com entrada oculta.
-3. Executar o lote uma única vez, revisar as coordenadas e baixar **resultado_tomtom_colab.zip**.
-4. Extrair somente **escolas.csv** e substituir **data/escolas.csv** no GitHub. Guardar **revisao_tomtom_privado.csv** fora do repositório.
-5. Após conferir permissão de retenção e validar as posições, o Streamlit usa somente o CSV versionado no GitHub; **não consulta geocodificação**.
-
-O notebook produz os mesmos identificadores e as mesmas 28 colunas da base original. **Não requer Python local nem App settings da TomTom no Streamlit**. A preparação via OSM/Streamlit é alternativa legada, não necessária.
-
-**Licenciamento:** confirme autorização contratual para retenção e publicação de coordenadas resultantes da TomTom. O parâmetro storeResult está obsoleto. Não publique chaves de API ou formulários brutos.
-## Preparar coordenadas UMA VEZ — online
-
-Para conservar as posições no CSV sem consultas recorrentes, a preparação inicial deve ser realizada **uma única vez** e concluída **antes de divulgar o painel**.
-
-> **Licenciamento:** os termos usuais da API TomTom restringem a retenção permanente dos resultados de geocodificação, salvo condições específicas. Por isso a etapa temporária usa dados OpenStreetMap, cuja diretriz de geocodificação permite armazenar resultados pontuais em bases próprias, com condições e atribuição. Consulte [Termos TomTom](https://docs.tomtom.com/legal/terms-and-conditions) e [Diretrizes da Fundação OSM](https://osmfoundation.org/wiki/Licence/Community_Guidelines/Geocoding_-_Guideline).
-
-1. Acesse https://share.streamlit.io e crie o aplicativo conectado ao repositório **migmiguel29/diagnostico-cultural-ourinhos**, branch **main**, arquivo **app.py**, Python **3.12**.
-2. Em **App settings → Secrets**, configure **somente** uma senha de preparação (não precisa de chave TomTom):
-   
-   ```toml
-PREPARACAO_SENHA = "UMA_SENHA_FORTE_DIFERENTE_DA_SUA_CONTA"
-```
-
-3. Abra a página **Preparacao unica OSM** no menu da aplicação, informe a senha e envie o **ZIP ou CSV original das respostas escolares**. Não inclua esse arquivo bruto no GitHub.
-4. Após aceitar a política de uso do serviço, pressione **Iniciar geocodificação única**. A etapa faz buscas sequenciais, com intervalo superior a um segundo, verifica o município e exige correspondência pontual ou escola identificada. Não são aceitos simples centros de rua ou bairro.
-5. Baixe **escolas.csv**, verifique os resultados — especialmente as escolas rurais e endereços incompletos — e envie **somente esse CSV minimizado** nesta conversa, para que seja incorporado ao GitHub em **data/escolas.csv**.
-6. Após atualizar o CSV, confirme que o painel mostra os pontos corretamente. Em seguida, desative as páginas administrativas de preparação, remova a senha dos Secrets e deixe **somente app.py** disponível aos visitantes.
-
-**Atenção:** o serviço público Nominatim admite lotes pequenos e pontuais sob limites e termos próprios. A geocodificação **não deve ser repetida toda vez que alguém acessa o aplicativo**, nem automatizada periodicamente. Confira a [política Nominatim](https://operations.osmfoundation.org/policies/nominatim/) antes de executar. O serviço permite no máximo uma requisição por segundo, exige identificação HTTP e cache de resultados.
-
-## Publicar e utilizar
-
-Abra https://share.streamlit.io e faça o deploy de **app.py** usando Python 3.12. Na apresentação pública final, os visitantes apenas consultam o painel e os arquivos CSV. **Não é necessária nenhuma chave TomTom nos Secrets**.
-
-## Estrutura dos arquivos
+## Principais arquivos
 
 ```text
-app.py                         painel com gráficos e mapa por CSV
-requirements.txt               dependências
-pages/2_Preparacao_unica_OSM.py etapa administrativa provisória (uma vez)
-data/escolas.csv               indicadores, latitude/longitude após validação
-data/agentes.csv                iniciativas culturais
-scripts/preparar_dados.py      importação e minimização de CSVs (manutenção)
-scripts/geocodificar_tomtom.py ferramenta legada, não utilizada no app
-.github/workflows/validar.yml  checagem de sintaxe
+app.py                        Dashboard de leitura e filtros geográficos
+data/escolas.csv               31 respostas escolares + coordenadas já gravadas
+data/agentes.csv                7 iniciativas culturais
+requirements.txt               Dependências instaladas pelo Streamlit Cloud
+scripts/                      Ferramentas de preparação, não executadas no dashboard
+auditoria_geocodificacao_2026-10-30.md  Registro histórico do processo
 ```
 
-## Privacidade e alcance
+## Fontes complementares das correções
 
-- **Não publicar os formulários originais:** contêm nomes, telefones, endereços e/ou e-mails de responsáveis.
-- Coordenadas precisas identificam estabelecimentos e devem ser divulgadas apenas com autorização institucional e base legal adequadas. Se necessário, use uma versão agregada por bairro.
-- Os dados são **respostas de pesquisa**, não censo da oferta cultural de Ourinhos.
-- As **7 iniciativas culturais** declararam áreas de atuação; sem endereços completos e verificados, não são representadas por marcadores pontuais.
+- [Escolas no Brasil — EE Orlando Quagliato](https://www.escolasnobrasil.com/sudeste/orlando-quagliato-ourinhos)
+- [Escolas no Brasil — EE Esmeralda Soares Ferraz](https://www.escolasnobrasil.com/sudeste/esmeralda-soares-ferraz-professora-ourinhos)
+- [Escolas no Brasil — EE Ary Corrêa](https://www.escolasnobrasil.com/sudeste/ary-correa-doutor-ourinhos)
+- [Escolas no Brasil — EMEF Salem Abujamra](https://www.escolasnobrasil.com/sudeste/salem-abujamra-doutor-emef-ourinhos)
+- [Escolas no Brasil — EMEF Jandira Lacerda Zanoni](https://www.escolasnobrasil.com/sudeste/jandira-lacerda-zanoni-profa-emef-ourinhos)
+- [Escolas no Brasil — EMEF Evani Maioral Ribeiro Carneiro](https://www.escolasnobrasil.com/sudeste/evani-maioral-ribeiro-carneiro-professor-emef-ourinhos)
+- [Secretaria Municipal de Educação de Ourinhos](https://smeourinhos.sp.gov.br/)
 
-## Indicadores iniciais
+## Privacidade
 
-- 31 escolas respondentes.
-- 22 declararam biblioteca ou sala de leitura.
-- 28 declararam projetos de incentivo à leitura.
-- Entre as 9 sem biblioteca nem sala, 8 relataram projetos de leitura.
-- 7 iniciativas culturais respondentes.
+O repositório armazena dados minimizados. Não publicar exportações originais dos formulários, nomes dos responsáveis, seus telefones/e-mails nem chaves da TomTom. Os nomes das escolas identificam instituições públicas, não participantes da pesquisa. As iniciativas culturais sem endereço verificável não recebem pontos artificiais no mapa.
+
+Este levantamento reflete os formulários recebidos, não um censo de todas as escolas e iniciativas do município.
