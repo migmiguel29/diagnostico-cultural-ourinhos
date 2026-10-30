@@ -11,4 +11,4 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validar sintaxe Python
-        run: python -m compileall -q app.py
+        run: python -m compileall -q app.py pages scripts
