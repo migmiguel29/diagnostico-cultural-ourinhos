@@ -20,13 +20,13 @@ h1,h2,h3 {letter-spacing:-.025em;}
 .smallnote {font-size:.90rem;color:#53616d;}
 </style>''', unsafe_allow_html=True)
 
-@st.cache_data(show_spinner=False)
 def ler_bases():
-    escolas = pd.read_csv(BASE/'data'/'escolas.csv', dtype={'id':str}).fillna('')
-    agentes = pd.read_csv(BASE/'data'/'agentes.csv', dtype={'id':str}).fillna('')
-    for col in ['latitude','longitude','infraestrutura_nota']:
-        if col in escolas:
-            escolas[col] = pd.to_numeric(escolas[col],errors='coerce')
+    """Sempre lê o CSV publicado: evita cache antigo sem latitude/longitude."""
+    escolas = pd.read_csv(BASE / 'data' / 'escolas.csv', dtype={'id': str}, encoding='utf-8-sig').fillna('')
+    agentes = pd.read_csv(BASE / 'data' / 'agentes.csv', dtype={'id': str}, encoding='utf-8-sig').fillna('')
+    for col in ('latitude', 'longitude', 'infraestrutura_nota'):
+        if col in escolas.columns:
+            escolas[col] = pd.to_numeric(escolas[col], errors='coerce')
     return escolas, agentes
 
 
@@ -277,13 +277,18 @@ with aba_agentes:
 
 with aba_mapa:
     st.subheader('Mapa das escolas de Ourinhos')
-    st.caption('Versão do mapa: 2026-10-30 • pontos nativos Streamlit a partir do CSV já georreferenciado')
+    st.caption('Coordenadas gravadas no GitHub • CSV carregado novamente a cada execução • nenhum acesso à TomTom')
+    com_coords = int(filtradas[['latitude', 'longitude']].notna().all(axis=1).sum())
+    if com_coords == 0 and len(filtradas):
+        st.error('Os dados carregados nesta instância ainda não têm coordenadas. Reinicie a aplicação pelo painel Streamlit Cloud (Manage app → Reboot). O CSV atual do GitHub contém 31 pontos.')
+    elif len(filtradas):
+        st.caption(f'Dados carregados: {com_coords}/{len(filtradas)} respostas com latitude/longitude, antes da validação geográfica.')
     pontuais, aproximados, referencias = separar_precisao(filtradas)
     a,b,c=st.columns(3)
     a.metric('Respostas no filtro', len(filtradas))
     b.metric('Pontos prováveis', len(pontuais))
     c.metric('Aproximados / não localizados', len(aproximados) + len(referencias) + (len(filtradas) - len(pontuais) - len(aproximados) - len(referencias)))
-    st.caption('Os pontos são desenhados diretamente a partir das colunas latitude e longitude de data/escolas.csv. O mapa Folium detalhado está disponível em uma seção expansível.')
+    st.caption('Os marcadores são gerados somente a partir do CSV do GitHub; as respostas duplicadas não criam escolas adicionais.')
     exibir_mapa(filtradas)
     st.markdown('**Iniciativas culturais:** o formulário informa áreas amplas de atuação, como “toda a cidade”, sem endereço pontual. Elas são analisadas estatisticamente, mas não recebem um marcador inventado.')
     st.caption('O mapa utiliza OpenStreetMap para visualização e coordenadas previamente gravadas em data/escolas.csv. Nenhuma API de geocodificação é chamada durante a visualização. Não é um mapa de calor da população, nem uma medida de acessibilidade por distância.')
